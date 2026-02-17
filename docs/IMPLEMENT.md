@@ -1,0 +1,65 @@
+Fiverr Sharable Links - Implementation Plan                                                                                                                                                           │
+│                                                                                                                                                                                                       │
+│ Context                                                                                                                                                                                               │
+│                                                                                                                                                                                                       │
+│ Implementing the backend service described in docs/plan.md: a NestJS API for short URL generation, click tracking with fraud validation, and analytics with monthly breakdowns.                       │
+│                                                                                                                                                                                                       │
+│ Already Completed                                                                                                                                                                                     │
+│                                                                                                                                                                                                       │
+│ - Replaced Express dependencies with NestJS (@nestjs/core, @nestjs/common, @nestjs/platform-express, class-validator, class-transformer, nanoid@3, Jest, supertest)                                   │
+│ - Updated package.json scripts for NestJS (nest build, nest start, jest, test:e2e)                                                                                                                    │
+│ - Updated tsconfig.json with decorator support (emitDecoratorMetadata, experimentalDecorators)                                                                                                        │
+│ - Added nest-cli.json                                                                                                                                                                                 │
+│ - Updated Prisma schema with Link and Click models (per plan spec)                                                                                                                                    │
+│ - Updated docker-compose.yml and .env.example with new DB credentials                                                                                                                                 │
+│ - Removed old Express source files and migrations                                                                                                                                                     │
+│ - Created src/main.ts (NestJS bootstrap with ValidationPipe)                                                                                                                                          │
+│                                                                                                                                                                                                       │
+│ Remaining Implementation                                                                                                                                                                              │
+│                                                                                                                                                                                                       │
+│ 1. Core NestJS Modules                                                                                                                                                                                │
+│                                                                                                                                                                                                       │
+│ - src/app.module.ts - Root module importing PrismaModule, LinksModule, FraudModule                                                                                                                    │
+│ - src/prisma/prisma.module.ts + prisma.service.ts - Reusable Prisma client as global module                                                                                                           │
+│                                                                                                                                                                                                       │
+│ 2. Fraud Module                                                                                                                                                                                       │
+│                                                                                                                                                                                                       │
+│ - src/fraud/fraud.module.ts + fraud.service.ts - Simulated validation (500ms delay, 50% random pass)                                                                                                  │
+│                                                                                                                                                                                                       │
+│ 3. Links Module (core business logic)                                                                                                                                                                 │
+│                                                                                                                                                                                                       │
+│ - src/links/links.module.ts - Imports PrismaModule, FraudModule                                                                                                                                       │
+│ - src/links/links.controller.ts - Three endpoints:                                                                                                                                                    │
+│   - POST /links - Generate short link (201 new / 200 existing)                                                                                                                                        │
+│   - GET /stats - Paginated analytics with monthly breakdown                                                                                                                                           │
+│   - GET /:shortCode - 302 redirect + async fraud check & click recording                                                                                                                              │
+│ - src/links/links.service.ts - Business logic: nanoid generation, dedup, click recording, stats aggregation                                                                                           │
+│ - src/links/dto/create-link.dto.ts - @IsUrl() + @IsNotEmpty() validation                                                                                                                              │
+│ - src/links/dto/link-stats.dto.ts - Response shape types                                                                                                                                              │
+│                                                                                                                                                                                                       │
+│ 4. Common Utilities                                                                                                                                                                                   │
+│                                                                                                                                                                                                       │
+│ - src/common/dto/pagination-query.dto.ts - Reusable page/limit query params                                                                                                                           │
+│ - src/common/interceptors/transform.interceptor.ts - Consistent response wrapper                                                                                                                      │
+│                                                                                                                                                                                                       │
+│ 5. Tests                                                                                                                                                                                              │
+│                                                                                                                                                                                                       │
+│ - src/links/links.controller.spec.ts - Unit tests for controller                                                                                                                                      │
+│ - src/links/links.service.spec.ts - Unit tests for service (mock Prisma, mock FraudService)                                                                                                           │
+│ - test/jest-e2e.config.ts - E2E Jest config                                                                                                                                                           │
+│ - test/links.e2e-spec.ts - Full integration tests against real/test DB                                                                                                                                │
+│                                                                                                                                                                                                       │
+│ 6. Verification                                                                                                                                                                                       │
+│                                                                                                                                                                                                       │
+│ - Run npx prisma generate to generate client                                                                                                                                                          │
+│ - Run npx tsc --noEmit to verify compilation                                                                                                                                                          │
+│ - Run npm test for unit tests                                                                                                                                                                         │
+│ - Start Docker + run migration + run npm run test:e2e for e2e tests                                                                                                                                   │
+│                                                                                                                                                                                                       │
+│ Key Design Decisions                                                                                                                                                                                  │
+│                                                                                                                                                                                                       │
+│ - nanoid v3 (CommonJS compatible) for short code generation (8 chars)                                                                                                                                 │
+│ - Fire-and-forget click tracking on redirect (don't block user)                                                                                                                                       │
+│ - Raw SQL DATE_TRUNC for monthly aggregation in stats                                                                                                                                                 │
+│ - Collision retry (up to 3 attempts) for nanoid uniqueness                                                                                                                                            │
+│ - Decimal(10,2) for earned credits (never float for money)     
