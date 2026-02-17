@@ -1,4 +1,4 @@
-# Fiverr Sharable Links
+# Sharable Links
 
 A backend service for short URL generation, click tracking with fraud validation, and analytics with monthly breakdowns. Built with NestJS, PostgreSQL, and Prisma.
 
