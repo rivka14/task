@@ -202,29 +202,6 @@ curl http://localhost:3000/nonexistent
 ```
 
 ---
-
-## AI Environment Setup
-
-### Claude Code
-
-This project was built using Claude Code (Anthropic's CLI agent). The full AI conversation prompts and planning documents are in the [`docs/`](./docs/) folder:
-
-- [`docs/PLAN.md`](./docs/PLAN.md) - Original requirements and technical plan
-- [`docs/IMPLEMENT.md`](./docs/IMPLEMENT.md) - Implementation steps and decisions
-- [`docs/FINAL.md`](./docs/FINAL.md) - Final implementation summary
-
-### Plugin Rules & Custom Configuration
-
-- **ValidationPipe** is configured globally in `main.ts` with:
-  - `whitelist: true` - strips unknown properties from request bodies
-  - `forbidNonWhitelisted: true` - rejects requests with unknown properties
-  - `transform: true` - auto-transforms query params to correct types
-  - `enableImplicitConversion: true` - converts string query params to numbers
-
-- **Prisma** is set up as a `@Global()` module so any module can inject `PrismaService` without importing `PrismaModule`
-
-- **NestJS CLI** (`nest-cli.json`) configured with `deleteOutDir: true` to clean `dist/` before each build
-
 - **Jest** is configured with two profiles:
   - Unit tests: `src/**/*.spec.ts` (runs via `npm test`)
   - E2E tests: `test/**/*.e2e-spec.ts` (runs via `npm run test:e2e` with separate config)
